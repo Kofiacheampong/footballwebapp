@@ -1,18 +1,24 @@
-# app.py
-from flask import Flask, render_template
-from stats_data import fetch_stats
-from dotenv import load_dotenv
 import os
+from flask import Flask, render_template, jsonify
+from dotenv import load_dotenv
+import requests
 
+load_dotenv()
 
 app = Flask(__name__)
 
-@app.route('/')
-def home():
-    api_key = os.getenv('APIKEY')  # Replace with your actual API key
-    stats = fetch_stats(api_key)
-    print(f"Fetched stats: {stats}")  # Print fetched data to verify
-    return render_template('index.html', stats=stats)
-
-if __name__ == '__main__':
-    app.run(debug=True)
+def fetch_stats(league_code):
+    api_key = os.environ['API_KEY']
+    headers = {
+        'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
+        'x-rapidapi-key': api_key
+    }
+    base_url = 'https://api-football-v1.p.rapidapi.com/v3/'
+    endpoint = f'standings?league={league_code}&season=2023'
+    url = base_url + endpoint
+    
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        retu
