@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Top Scorers</title>
+</head>
+<body>
+    <h1>Top Scorers</h1>
+    <table border="1">
+        <tr>
+            <th>Player</th>
+            <th>Team</th>
+            <th>Player Image</th>
+            <th>Team Emblem</th>
+            <th>Goals</th>
+        </tr>
+        {% for scorer in top_scorers %}
+        <tr>
+            <td>{{ scorer['player']['name'] }}</td>
+            <td>{{ scorer['statistics'][0]['team']['name'] }}</td>
+            <td><img src="{{ scorer['player']['photo'] }}" alt="Player Image" width="30"></td>
+            <td><img src="{{ scorer['statistics'][0]['team']['logo'] }}" alt="Team Emblem" width="30"></td>
+            <td>{{ scorer['statistics'][0]['goals']['total'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <a href="{{ url_for('index') }}">Back to Home</a>
+</body>
+</html>

@@ -1,36 +1,18 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La Liga Standings</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+    <title>Top 5 European Leagues Standings</title>
 </head>
 <body>
-    <div class="container">
-        <h1 class="my-4">La Liga Standings</h1>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th scope="col">Position</th>
-                    <th scope="col">Team</th>
-                    <th scope="col">Emblem</th>
-                    <th scope="col">Points</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for team in stats %}
-                    <tr>
-                        <th scope="row">{{ team.position }}</th>
-                        <td>{{ team.team }}</td>
-                        <td><img src="{{ team.emblem }}" alt="{{ team.team }} emblem" width="50"></td>
-                        <td>{{ team.points }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    <h1>Top 5 European Leagues Standings</h1>
+    <ul>
+        <li><a href="{{ url_for('league', league_name='premier-league') }}">Premier League</a></li>
+        <li><a href="{{ url_for('league', league_name='la-liga') }}">La Liga</a></li>
+        <li><a href="{{ url_for('league', league_name='serie-a') }}">Serie A</a></li>
+        <li><a href="{{ url_for('league', league_name='bundesliga') }}">Bundesliga</a></li>
+        <li><a href="{{ url_for('league', league_name='ligue-1') }}">Ligue 1</a></li>
+    </ul>
+    <a href="{{ url_for('top_scorer') }}">Top Scorers</a>
 </body>
 </html>
