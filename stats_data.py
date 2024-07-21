@@ -56,4 +56,4 @@ def fetch_stats(league_code):
 #     else:
 #         print(f"Error fetching data: {response.status_code}")
 
-#     return [
+#     return []
