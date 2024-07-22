@@ -1,8 +1,8 @@
 import requests
 
-url = "https://api-football-v1.p.rapidapi.com/v3/leagues"
+url = "https://api-football-v1.p.rapidapi.com/v3/players/topassists"
 
-querystring = {"id":"39"}
+querystring = {"league":"39","season":"2020"}
 
 headers = {
 	"x-rapidapi-key": "3f1b9299famsh4b3faa45d4246b1p12e413jsn9a109f61fc76",

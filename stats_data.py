@@ -11,11 +11,64 @@ def fetch_stats(league_code):
         'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
         'x-rapidapi-key': api_key
     }
-    base_url = '"https://api-football-vl.p.rapidapi.com/v2/teams/league/442" '
-    url = f'{base_url}standings?league={league_code}&season=2023'
-    response = requests.get(url, headers=headers)
-    print(response.json())
+    base_url = 'https://api-football-v1.p.rapidapi.com/v3/'
+    endpoint = f'standings?league={league_code}&season=2023'
+    url = base_url + endpoint
+    
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        return data
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+        return None
 
+def fetch_top_scorers(league_code):
+    api_key = os.environ['API_KEY']
+    headers = {
+        'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
+        'x-rapidapi-key': api_key
+    }
+    base_url = 'https://api-football-v1.p.rapidapi.com/v3/'
+    endpoint = f'players/topscorers?league={league_code}&season=2023'
+    url = base_url + endpoint
+    
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        return data
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+        return None
+    
+
+def fetch_top_assists(league_code):
+    api_key = os.environ['API_KEY']
+    headers = {
+        'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
+        'x-rapidapi-key': api_key
+    }
+    base_url = 'https://api-football-v1.p.rapidapi.com/v3/'
+    endpoint = f'players/topassists?league={league_code}&season=2023'
+    url = base_url + endpoint
+    
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Will raise HTTPError for bad responses
+        data = response.json()
+        return data
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+        return None
+
+# if __name__ == "__main__":
+#     load_dotenv()
+#     league_codes = [39, 140, 135, 78, 61]
+#     for code in league_codes:
+#         data = fetch_top_assists(code)
+#         print(data)
 
 # def fetch_stats(league_code):
 #     api_key = os.environ['API_KEY']

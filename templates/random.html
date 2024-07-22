@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ league_name }} Standings{% endblock %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2 class="text-center">{{ league_name }} Standings</h2>
+
+            <!-- League Standings on the left -->
+            <div class="col-md-6">
+                <h2>Standings</h2>
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Position</th>
+                            <th>Team</th>
+                            <th>Emblem</th>
+                            <th>Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for standing in standings['response'][0]['league']['standings'][0] %}
+                        <tr>
+                            <td>{{ standing['rank'] }}</td>
+                            <td>{{ standing['team']['name'] }}</td>
+                            <td><img src="{{ standing['team']['logo'] }}" alt="Team Emblem" width="30"></td>
+                            <td>{{ standing['points'] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Top Scorers and Assisters on the right -->
+            <div class="col-md-6">
+                <!-- Top Scorers -->
+                <div class="mb-4">
+                    <h2>Top Scorers</h2>
+                    <div class="card-deck">
+                        {% for scorer in top_scorers %}
+                        <div class="card mb-4">
+                            <img src="{{ scorer['player']['photo'] }}" class="card-img-top" alt="{{ scorer['player']['name'] }}">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ scorer['player']['name'] }}</h5>
+                                <p class="card-text">{{ scorer['statistics'][0]['team']['name'] }}</p>
+                                <p class="card-text"><small class="text-muted">Goals: {{ scorer['statistics'][0]['goals']['total'] }}</small></p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Top Assisters -->
+                <div class="mt-4">
+                    <h2>Top Assisters</h2>
+                    <div class="card-deck">
+                        {% for assister in top_assists %}
+                        <div class="card mb-4">
+                            <img src="{{ assister['player']['photo'] }}" class="card-img-top" alt="{{ assister['player']['name'] }}">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ assister['player']['name'] }}</h5>
+                                <p class="card-text">{{ assister['statistics'][0]['team']['name'] }}</p>
+                                <p class="card-text"><small class="text-muted">Assists: {{ assister['statistics'][0]['goals']['assists'] }}</small></p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        
+
+        <a href="{{ url_for('index') }}" class="btn btn-primary mt-4">Back to Home</a>
+    </div>
+{% endblock %}

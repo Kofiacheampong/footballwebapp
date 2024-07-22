@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Top Assists{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Top Assists</h1>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Team</th>
+                    <th>Assists</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assist in assists_list %}
+                <tr>
+                    <td>
+                        <div >
+                            <img src="{{ assist['player']['photo'] }}" alt="Player Photo" width="30" >
+                            {{ assist['player']['name'] }}
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <img src="{{ assist['statistics'][0]['team']['logo'] }}" alt="Team Logo" width="30">                           
+                             {{ assist['statistics'][0]['team']['name'] }}
+
+                        </div>
+                    </td>
+                    <div><td>{{ assist['statistics'][0]['goals']['assists'] }}</td></div>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
+</div>
+{% endblock %}

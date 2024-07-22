@@ -1,18 +1,82 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Top 5 European Leagues Standings</title>
-</head>
-<body>
-    <h1>Top 5 European Leagues Standings</h1>
-    <ul>
-        <li><a href="{{ url_for('league', league_name='premier-league') }}">Premier League</a></li>
-        <li><a href="{{ url_for('league', league_name='la-liga') }}">La Liga</a></li>
-        <li><a href="{{ url_for('league', league_name='serie-a') }}">Serie A</a></li>
-        <li><a href="{{ url_for('league', league_name='bundesliga') }}">Bundesliga</a></li>
-        <li><a href="{{ url_for('league', league_name='ligue-1') }}">Ligue 1</a></li>
-    </ul>
-    <a href="{{ url_for('top_scorer') }}">Top Scorers</a>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <img src="https://media.api-sports.io/football/leagues/179.png" class="card-img-top" alt="Premier League">
+                <div class="card-body">
+                    <h5 class="card-title">Premier League</h5>
+                    <p class="card-text">View the standings and top players of the Premier League.</p>
+                    <a href="{{ url_for('league', league_name='premier-league') }}" class="btn btn-primary">View League</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <img src="https://media.api-sports.io/football/leagues/179.png" class="card-img-top" alt="La Liga">
+                <div class="card-body">
+                    <h5 class="card-title">La Liga</h5>
+                    <p class="card-text">View the standings and top players of La Liga.</p>
+                    <a href="{{ url_for('league', league_name='la-liga') }}" class="btn btn-primary">View League</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <img src="https://media.api-sports.io/football/leagues/179.png" class="card-img-top" alt="Serie A">
+                <div class="card-body">
+                    <h5 class="card-title">Serie A</h5>
+                    <p class="card-text">View the standings and top players of Serie A.</p>
+                    <a href="{{ url_for('league', league_name='serie-a') }}" class="btn btn-primary">View League</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <img src="https://via.placeholder.com/150" class="card-img-top" alt="Bundesliga">
+                <div class="card-body">
+                    <h5 class="card-title">Bundesliga</h5>
+                    <p class="card-text">View the standings and top players of the Bundesliga.</p>
+                    <a href="{{ url_for('league', league_name='bundesliga') }}" class="btn btn-primary">View League</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <img src="hhttps://via.placeholder.com/150" class="card-img-top" alt="Ligue 1">
+                <div class="card-body">
+                    <h5 class="card-title">Ligue 1</h5>
+                    <p class="card-text">View the standings and top players of Ligue 1.</p>
+                    <a href="{{ url_for('league', league_name='ligue-1') }}" class="btn btn-primary">View League</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <img src="https://via.placeholder.com/150" class="card-img-top" alt="Top Scorers">
+                <div class="card-body">
+                    <h5 class="card-title">Top Scorers</h5>
+                    <p class="card-text">View the top scorers across all leagues.</p>
+                    <a href="{{ url_for('top_scorer') }}" class="btn btn-primary">View Top Scorers</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <img src="https://via.placeholder.com/150" class="card-img-top" alt="Top Assists">
+                <div class="card-body">
+                    <h5 class="card-title">Top Assists</h5>
+                    <p class="card-text">View the top assists across all leagues.</p>
+                    <a href="{{ url_for('top_assists') }}" class="btn btn-primary">View Top Assists</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

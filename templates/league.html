@@ -1,27 +1,97 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ league_name }} Standings</title>
-</head>
-<body>
-    <h1>{{ league_name }} Standings</h1>
-    <table border="1">
-        <tr>
-            <th>Position</th>
-            <th>Team</th>
-            <th>Emblem</th>
-            <th>Points</th>
-        </tr>
-        {% for standing in standings['response'][0]['league']['standings'][0] %}
-        <tr>
-            <td><img src="{{ standing['team']['logo'] }}" alt="Team Emblem" width="30"></td>
-            <td>{{ standing['rank'] }}</td>
-            <td>{{ standing['team']['name'] }}</td>
-            <td>{{ standing['points'] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    <a href="{{ url_for('index') }}">Back to Home</a>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}{{ league_name }} Standings{% endblock %}
+
+{% block content %}
+<div class="container-xl mt-4">
+    <h2>{{ league_name }} Standings 2023</h2>
+    <div class="row">
+        <!-- League Standings -->
+        <div class="col-md-6">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>Pos</th>
+                        <th>Team</th>
+                        <th>Points</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for standing in standings[0]['league']['standings'][0] %}
+                    <tr>
+                        <td>{{ standing['rank'] }}</td>
+                        <td>
+                            {{ standing['team']['name'] }}
+                            <img src="{{ standing['team']['logo'] }}" alt="Team Emblem" class="team-logo" width="30" style="margin-left: 10px;">
+                        </td>
+                        <td>{{ standing['points'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Top Scorers and Assisters -->
+        <div class="col-md-6">
+            <!-- Top Scorers -->
+            <div class="mb-4">
+                <h2>Top Scorers</h2>
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>Team</th>
+                            <th>Goals</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for scorer in top_scorers %}
+                        <tr>
+                            <td>
+                                <img src="{{ scorer['player']['photo'] }}" alt="{{ scorer['player']['name'] }}" class="player-photo" width="50" style="margin-right: 10px;">
+                                {{ scorer['player']['name'] }}
+                            </td>
+                            <td>
+                                {{ scorer['statistics'][0]['team']['name'] }}
+                                <img src="{{ scorer['statistics'][0]['team']['logo'] }}" alt="Team Emblem" class="team-logo" width="30" style="margin-left: 10px;">
+                            </td>
+                            <td>{{ scorer['statistics'][0]['goals']['total'] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Top Assisters -->
+            <div>
+                <h2>Top Assisters</h2>
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>Team</th>
+                            <th>Assists</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assister in top_assists %}
+                        <tr>
+                            <td>
+                                <img src="{{ assister['player']['photo'] }}" alt="{{ assister['player']['name'] }}" class="player-photo" width="50" style="margin-right: 10px;">
+                                {{ assister['player']['name'] }}
+                            </td>
+                            <td>
+                                {{ assister['statistics'][0]['team']['name'] }}
+                                <img src="{{ assister['statistics'][0]['team']['logo'] }}" alt="Team Emblem" class="team-logo" width="30" style="margin-left: 10px;">
+                            </td>
+                            <td>{{ assister['statistics'][0]['goals']['assists'] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <a href="{{ url_for('index') }}" class="btn btn-primary mt-4">Back to Home</a>
+</div>
+{% endblock %}
