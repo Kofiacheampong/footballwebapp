@@ -1,9 +1,10 @@
+<!-- base.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>{% block title %}My Football Stats{% endblock %}</title>
+    <title>{% block title %} European Leagues {% endblock %}</title>
     <!-- Bootstrap CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom CSS -->
@@ -17,21 +18,13 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
+                {% for league_name, logo_url in league_logos.items() %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('league', league_name='premier-league') }}">Premier League</a>
+                    <a class="nav-link" href="{{ url_for('league', league_name=league_name) }}">
+                        <img src="{{ logo_url }}" alt="{{ league_name }}" width="20"> {{ league_name.replace('-', ' ').title() }}
+                    </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('league', league_name='la-liga') }}">La Liga</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('league', league_name='serie-a') }}">Serie A</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('league', league_name='bundesliga') }}">Bundesliga</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('league', league_name='ligue-1') }}">Ligue 1</a>
-                </li>
+                {% endfor %}
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('top_scorer') }}">Top Scorers</a>
                 </li>
@@ -41,7 +34,8 @@
             </ul>
         </div>
     </nav>
-
+  
+           
     <div class="container mt-4">
         {% block content %}
         {% endblock %}

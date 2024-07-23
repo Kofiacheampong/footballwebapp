@@ -3,6 +3,17 @@
 {% block title %}Top Assists{% endblock %}
 
 {% block content %}
+<div><!-- Add this form somewhere in base.html or the specific template -->
+    <form action="{{ request.path }}" method="get" class="mb-4 form-select">
+        <div class="form-group">
+            <label for="year">Select Year:</label>
+            <select id="year" name="year" class="form-control">
+                {% for y in range(2013, 2024) %}
+                <option value="{{ y }}" {% if y == year|int %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </form></div>
 <div class="container mt-4">
     <h1 class="mb-4">Top Assists</h1>
     <div class="table-responsive">
