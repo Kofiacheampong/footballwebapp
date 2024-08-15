@@ -8,7 +8,7 @@
         <div class="form-group">
             <label for="year">Select Year:</label>
             <select id="year" name="year" class="form-control">
-                {% for y in range(2013, 2024) %}
+                {% for y in range(2013, 2025) %}
                 <option value="{{ y }}" {% if y == year|int %}selected{% endif %}>{{ y }}</option>
                 {% endfor %}
             </select>

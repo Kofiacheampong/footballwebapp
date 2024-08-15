@@ -3,64 +3,25 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-
 <div class="container mt-5">
     <div class="row">
+        {% for league_name, league_code in league_codes.items() %}
         <div class="col-md-4">
-            <div class="card">
-                <img src="https://media.api-sports.io/football/leagues/39.png" class="card-img-top" alt="Premier League" width="30" height="auto">
+            <div class="card mb-4">
+                <img src="{{ league_logos[league_name] }}" class="card-img-top img-fluid" alt="{{ league_name }}" >
                 <div class="card-body">
-                    <h5 class="card-title">Premier League</h5>
-                    <p class="card-text">View the standings and top players of the Premier League.</p>
-                    <a href="{{ url_for('league', league_name='premier-league') }}" class="btn btn-primary">View League</a>
+                    <!-- <h5 class="card-title">{{ league_name.replace('-', ' ').title() }}</h5> -->
+                    <p class="card-text">View the standings and top players of the {{ league_name.replace('-', ' ').title() }}.</p>
+                    <a href="{{ url_for('league', league_name=league_name) }}" class="btn btn-primary">View League</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card">
-                <img src="https://media.api-sports.io/football/leagues/140.png" class="card-img-top" alt="La Liga" width="30" height="auto">
-                <div class="card-body">
-                    <h5 class="card-title">La Liga</h5>
-                    <p class="card-text">View the standings and top players of La Liga.</p>
-                    <a href="{{ url_for('league', league_name='la-liga') }}" class="btn btn-primary">View League</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <img src="https://media.api-sports.io/football/leagues/135.png" class="card-img-top" alt="Serie A" width="30" height="auto">
-                <div class="card-body">
-                    <h5 class="card-title">Serie A</h5>
-                    <p class="card-text">View the standings and top players of Serie A.</p>
-                    <a href="{{ url_for('league', league_name='serie-a') }}" class="btn btn-primary">View League</a>
-                </div>
-            </div>
-        </div>
+        {% endfor %}
     </div>
     <div class="row mt-4">
         <div class="col-md-4">
             <div class="card">
-                <img src="https://media.api-sports.io/football/leagues/78.png" class="card-img-top" alt="Bundesliga" width="30" height="auto">
-                <div class="card-body">
-                    <h5 class="card-title">Bundesliga</h5>
-                    <p class="card-text">View the standings and top players of the Bundesliga.</p>
-                    <a href="{{ url_for('league', league_name='bundesliga') }}" class="btn btn-primary">View League</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <img src="https://media.api-sports.io/football/leagues/61.png" class="card-img-top" alt="Ligue 1" width="30" height="auto">
-                <div class="card-body">
-                    <h5 class="card-title">Ligue 1</h5>
-                    <p class="card-text">View the standings and top players of Ligue 1.</p>
-                    <a href="{{ url_for('league', league_name='ligue-1') }}" class="btn btn-primary">View League</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <img src="https://via.placeholder.com/150" class="card-img-top" alt="Top Scorers">
+                <i class="bi bi-trophy" style="font-size: 5rem; display: block; text-align: center; margin-top: 20px;"></i>
                 <div class="card-body">
                     <h5 class="card-title">Top Scorers</h5>
                     <p class="card-text">View the top scorers across all leagues.</p>
@@ -70,8 +31,8 @@
         </div>
         <div class="col-md-4">
             <div class="card">
-                <img src="https://via.placeholder.com/150" class="card-img-top" alt="Top Assists">
-                <div class="card-body">
+                <i class="bi bi-stars" style="font-size: 5rem; display: block; text-align: center; margin-top: 20px;"></i>                
+                <div class="card-body mb-4" >
                     <h5 class="card-title">Top Assists</h5>
                     <p class="card-text">View the top assists across all leagues.</p>
                     <a href="{{ url_for('top_assists') }}" class="btn btn-primary">View Top Assists</a>

@@ -92,34 +92,19 @@ def get_league_logos():
 
     return league_logos
 
-def get_rating():
+def fetch_player_stats_by_name(player_name, league_code, year):
     api_key = os.environ['API_KEY']
-    url = "https://api-football-v1.p.rapidapi.com/v3/leagues"
+
+    url = f"https://api-football-v1.p.rapidapi.com/v3/players"
+    querystring = {"search": player_name, "league": league_code, "season": year}
+    
     headers = {
-        'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
-        'x-rapidapi-key': api_key  # Replace with your actual API key
+        "X-RapidAPI-Key": api_key,
+        "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
     }
-    response = requests.get(url, headers=headers)
-    data = response.json()
-
-    # Define relevant leagues by name or ID
-    league_codes = {
-        'premier-league': 39,
-        'la-liga': 140,
-        'serie-a': 135,
-        'bundesliga': 78,
-        'ligue-1': 61
-    }
- 
-    leagues = data.get('response', [])
-    league_logos = {}
-    for league in leagues:
-        league_id = league['league']['id']
-        league_name = league['league']['name'].lower().replace(" ", "-")
-        if league_id in league_codes.values():
-            league_logos[league_name] = league['league']['logo']
-
-    return league_logos
+    
+    response = requests.request("GET", url, headers=headers, params=querystring)
+    return response.json()
 
 
 
