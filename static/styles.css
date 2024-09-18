@@ -19,4 +19,67 @@ h1 {
   max-height: 150px;
   -o-object-fit: contain;
      object-fit: contain;
-}/*# sourceMappingURL=styles.css.map */
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+
+.player-card {
+  border: 1px solid #ddd;
+  padding: 20px;
+  border-radius: 10px;
+  width: 45%;
+  text-align: center;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.player-card img {
+  max-width: 100%;
+  border-radius: 50%;
+  margin-bottom: 15px;
+}
+
+.player-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.player-card ul li {
+  margin: 10px 0;
+}
+.player-photo {
+  width: 150px;
+  height: auto;
+  border-radius: 8px;
+}
+
+.league-logo, .team-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+}
+
+.comparison-container {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.player-card {
+  border: 1px solid #ddd;
+  padding: 20px;
+  margin: 10px;
+  border-radius: 8px;
+  width: 45%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.league-stats {
+  margin-bottom: 20px;
+}
+
+/*# sourceMappingURL=styles.css.map */

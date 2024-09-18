@@ -5,6 +5,19 @@ from dotenv import load_dotenv
 import requests
 load_dotenv()
 
+# context_processors.py
+
+def league_logos_processor():
+    return {
+        'league_logos': {
+            'Premier League': 'https://example.com/epl_logo.png',
+            'La Liga': 'https://example.com/la_liga_logo.png',
+            'Serie A': 'https://example.com/serie_a_logo.png',
+            'Bundesliga': 'https://example.com/bundesliga_logo.png',
+            'Ligue 1': 'https://example.com/ligue_1_logo.png'
+        }
+    }
+
 def fetch_stats(league_code, year):
     api_key = os.environ['API_KEY']
     headers = {
@@ -92,20 +105,84 @@ def get_league_logos():
 
     return league_logos
 
-def fetch_player_stats_by_name(player_name, league_code, year):
+def fetch_player_stats_by_name(player_name,year):
     api_key = os.environ['API_KEY']
 
-    url = f"https://api-football-v1.p.rapidapi.com/v3/players"
-    querystring = {"search": player_name, "league": league_code, "season": year}
+    url = f"https://api-football-v1.p.rapidapi.com/v3/players/seasons"
+    querystring = {"search": player_name, "season":year }
     
     headers = {
         "X-RapidAPI-Key": api_key,
         "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
     }
     
-    response = requests.request("GET", url, headers=headers, params=querystring)
-    return response.json()
+    try:
+        # Make the GET request
+        response = requests.get(url, headers=headers, params=querystring)
+        response.raise_for_status()  # Raise an HTTPError for bad responses
 
+        # Parse the JSON response
+        data = response.json()
+
+        # Check if the response contains the expected data
+        if 'response' in data and len(data['response']) > 0:
+            return data
+        else:
+            print("No data found for player:", player_name)
+            return None
+
+    except requests.exceptions.RequestException as e:
+        # Handle requests exceptions
+        print(f"An error occurred: {e}")
+        return None
+
+def extract_player_data(player_data):
+    try:
+        # Extract player info and stats
+        player_info = player_data['response'][0]['player']
+        stats_by_league = player_data['response'][0]['statistics']
+
+        # Create player details dictionary
+        player_details = {
+            'name': player_info.get('name', 'N/A'),
+            'age': player_info.get('age', 'N/A'),
+            'photo': player_info.get('photo', 'N/A'),
+            'height': player_info.get('height', 'N/A'),
+            'weight': player_info.get('weight', 'N/A'),
+            'nationality': player_info.get('nationality', 'N/A'),
+            'leagues': []
+        }
+
+        # Process statistics for each league
+        for stats in stats_by_league:
+            league_data = {
+                'league_name': stats['league'].get('name', 'N/A'),
+                'league_logo': stats['league'].get('logo', 'N/A'),
+                'team_name': stats['team'].get('name', 'N/A'),
+                'team_logo': stats['team'].get('logo', 'N/A'),
+                'appearances': stats['games'].get('appearances', 0),
+                'goals': stats['goals'].get('total', 0),
+                'assists': stats['goals'].get('assists', 0),
+                'shots_total': stats['shots'].get('total', 0),
+                'shots_on_target': stats['shots'].get('on', 0),
+                'dribbles_attempted': stats['dribbles'].get('attempts', 0),
+                'dribbles_success': stats['dribbles'].get('success', 0),
+                'fouls_drawn': stats['fouls'].get('drawn', 0),
+                'fouls_committed': stats['fouls'].get('committed', 0),
+                'yellow_cards': stats['cards'].get('yellow', 0),
+                'red_cards': stats['cards'].get('red', 0),
+                'rating': stats['games'].get('rating', 0)
+            }
+            player_details['leagues'].append(league_data)
+
+        return player_details
+
+    except KeyError as e:
+        print(f"Missing key: {e}")
+        return None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
 
 
 # if __name__ == "__main__":

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Player Comparisons{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Player Comparison</h1>
+
+    <!-- Comparison Form -->
+    <form method="GET" action="{{ url_for('compare_players') }}">
+        <div>
+            <label for="player1">Player 1:</label>
+            <input type="text" id="player1" name="player1" required>
+        </div>
+        <div>
+            <label for="player2">Player 2:</label>
+            <input type="text" id="player2" name="player2" required>
+        </div>
+        <!-- League selection (optional) -->
+        <!-- <div>
+            <label for="league">League:</label>
+            <select id="league" name="league" required>
+                <option value="39">Premier League</option>
+                <option value="140">La Liga</option>
+                <option value="135">Serie A</option>
+                <option value="78">Bundesliga</option>
+                <option value="61">Ligue 1</option>
+            </select>
+        </div> -->
+        <div>
+            <label for="year">Year:</label>
+            <select id="year" name="year" required>
+                {% for y in range(2023, 2012, -1) %}
+                    <option value="{{ y }}">{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit">Compare</button>
+    </form>
+
+    <!-- Player Comparison Results -->
+    {% if player1 and player2 %}
+    <div class="comparison-container">
+        {% for player in [player1, player2] %}
+        <div class="player-card">
+            <h2>{{ player['name'] }}</h2>
+            <img src="{{ player['photo'] }}" alt="{{ player['name'] }}" class="player-photo">
+            <p><strong>Age:</strong> {{ player['age'] }}</p>
+            <p><strong>Height:</strong> {{ player['height'] }}</p>
+            <p><strong>Weight:</strong> {{ player['weight'] }}</p>
+            <p><strong>Nationality:</strong> {{ player['nationality'] }}</p>
+            <hr>
+            {% for league in player['leagues'] %}
+            <div class="league-stats">
+                <h3>{{ league['league_name'] }}</h3>
+                <img src="{{ league['league_logo'] }}" alt="{{ league['league_name'] }}" class="league-logo">
+                <p><strong>Team:</strong> <img src="{{ league['team_logo'] }}" alt="{{ league['team_name'] }}" class="team-logo"> {{ league['team_name'] }}</p>
+                <p><strong>Appearances:</strong> {{ league['appearances'] }}</p>
+                <p><strong>Goals:</strong> {{ league['goals'] }}</p>
+                <p><strong>Assists:</strong> {{ league['assists'] }}</p>
+                <p><strong>Shots (Total/On Target):</strong> {{ league['shots_total'] }} / {{ league['shots_on_target'] }}</p>
+                <p><strong>Dribbles (Attempted/Success):</strong> {{ league['dribbles_attempted'] }} / {{ league['dribbles_success'] }}</p>
+                <p><strong>Fouls (Drawn/Committed):</strong> {{ league['fouls_drawn'] }} / {{ league['fouls_committed'] }}</p>
+                <p><strong>Yellow Cards:</strong> {{ league['yellow_cards'] }}</p>
+                <p><strong>Red Cards:</strong> {{ league['red_cards'] }}</p>
+                <p><strong>Rating:</strong> {{ league['rating'] }}</p>
+            </div>
+            <hr>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No player data available. Please make sure both players are entered correctly.</p>
+    {% endif %}
+</div>
+{% endblock %}
