@@ -5,7 +5,13 @@
 {% block content %}
 <div class="container">
     <h1>Player Comparison</h1>
-
+    {% if errors %}
+    <div class="errors">
+        {% for error in errors %}
+            <p>{{ error }}</p>
+        {% endfor %}
+    </div>
+{% endif %}
     <!-- Comparison Form -->
     <form method="GET" action="{{ url_for('compare_players') }}">
         <div>
@@ -55,7 +61,7 @@
                 <h3>{{ league['league_name'] }}</h3>
                 <img src="{{ league['league_logo'] }}" alt="{{ league['league_name'] }}" class="league-logo">
                 <p><strong>Team:</strong> <img src="{{ league['team_logo'] }}" alt="{{ league['team_name'] }}" class="team-logo"> {{ league['team_name'] }}</p>
-                <p><strong>Appearances:</strong> {{ league['appearances'] }}</p>
+                <p><strong>Appearances:</strong> {{ league['appearences'] }}</p>
                 <p><strong>Goals:</strong> {{ league['goals'] }}</p>
                 <p><strong>Assists:</strong> {{ league['assists'] }}</p>
                 <p><strong>Shots (Total/On Target):</strong> {{ league['shots_total'] }} / {{ league['shots_on_target'] }}</p>

@@ -1,6 +1,8 @@
 import os
 import time
 from dotenv import load_dotenv
+import logging
+import json
 
 import requests
 load_dotenv()
@@ -105,38 +107,43 @@ def get_league_logos():
 
     return league_logos
 
-def fetch_player_stats_by_name(player_name,year):
+def fetch_player_stats_by_name(player_name, year):
     api_key = os.environ['API_KEY']
-
-    url = f"https://api-football-v1.p.rapidapi.com/v3/players/seasons"
-    querystring = {"search": player_name, "season":year }
+    url = "https://api-football-v1.p.rapidapi.com/v3/players"
     
     headers = {
         "X-RapidAPI-Key": api_key,
         "X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
     }
     
-    try:
-        # Make the GET request
-        response = requests.get(url, headers=headers, params=querystring)
-        response.raise_for_status()  # Raise an HTTPError for bad responses
+    # List of major league IDs
+    league_ids = [39, 140, 135, 78, 61]  # Premier League, La Liga, Serie A, Bundesliga, Ligue 1
+    
+    for league_id in league_ids:
+        querystring = {"search": player_name, "season": year, "league": league_id}
+        
+        try:
+            response = requests.get(url, headers=headers, params=querystring)
+            response.raise_for_status()
 
-        # Parse the JSON response
-        data = response.json()
+            data = response.json()
+            logging.info(f"API Response for {player_name} in league {league_id}: {data}")
 
-        # Check if the response contains the expected data
-        if 'response' in data and len(data['response']) > 0:
-            return data
-        else:
-            print("No data found for player:", player_name)
-            return None
-
-    except requests.exceptions.RequestException as e:
-        # Handle requests exceptions
-        print(f"An error occurred: {e}")
-        return None
+            if 'response' in data and data['response']:
+                return data
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Request error for {player_name} in league {league_id}: {e}")
+        except ValueError as e:
+            logging.error(f"JSON parsing error for {player_name} in league {league_id}: {e}")
+    
+    logging.warning(f"No data found for player: {player_name} in any league")
+    return None
 
 def extract_player_data(player_data):
+    if not player_data or 'response' not in player_data or not player_data['response']:
+        logging.error("Invalid or empty player data")
+        return None
+
     try:
         # Extract player info and stats
         player_info = player_data['response'][0]['player']
@@ -160,7 +167,7 @@ def extract_player_data(player_data):
                 'league_logo': stats['league'].get('logo', 'N/A'),
                 'team_name': stats['team'].get('name', 'N/A'),
                 'team_logo': stats['team'].get('logo', 'N/A'),
-                'appearances': stats['games'].get('appearances', 0),
+                'appearences': stats['games'].get('appearences', 0),  # Changed from 'appearances' to 'appearences'
                 'goals': stats['goals'].get('total', 0),
                 'assists': stats['goals'].get('assists', 0),
                 'shots_total': stats['shots'].get('total', 0),
@@ -177,11 +184,13 @@ def extract_player_data(player_data):
 
         return player_details
 
-    except KeyError as e:
-        print(f"Missing key: {e}")
+    except (KeyError, IndexError) as e:
+        logging.error(f"Error extracting player data: {e}")
+        logging.debug(f"Player data: {player_data}")
         return None
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logging.error(f"Unexpected error occurred: {e}")
+        logging.debug(f"Player data: {player_data}")
         return None
 
 

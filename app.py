@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, jsonify,request
 from dotenv import load_dotenv
 import requests
+import logging
 from stats_data import fetch_top_assists, fetch_stats, fetch_top_scorers, get_league_logos, fetch_player_stats_by_name, extract_player_data, league_logos_processor
 
 load_dotenv()
@@ -9,9 +10,10 @@ load_dotenv()
 app = Flask(__name__)
 
 app.context_processor(league_logos_processor)
-
+logging.basicConfig(level=logging.DEBUG)
 
 @app.route('/')
+
 def index():
     year = request.args.get('year', '2023')
     league_logos = get_league_logos()
@@ -101,31 +103,38 @@ def top_assists():
     return render_template('top_assists.html', assists_list=assists_list, year = year, league_codes = league_codes,league_logos = league_logos)
 
 @app.route('/player_comparison', methods=['GET'])
+
+@app.route('/player_comparison', methods=['GET'])
 def compare_players():
     player1_name = request.args.get('player1')
     player2_name = request.args.get('player2')
-    # league_code = request.args.get('league')
-    year = request.args.get('year', '2023')  # Default year to 2023 if not provided
-    
-    league_logos = {
-        'Premier League': 'https://example.com/epl_logo.png',
-        'La Liga': 'https://example.com/la_liga_logo.png',
-        'Serie A': 'https://example.com/serie_a_logo.png',
-        'Bundesliga': 'https://example.com/bundesliga_logo.png',
-        'Ligue 1': 'https://example.com/ligue_1_logo.png'
-    }
+    year = request.args.get('year', '2023')
 
+    league_logos = get_league_logos()
+
+    errors = []
+    player1_details = player2_details = None
 
     if player1_name and player2_name:
-        player1_data = fetch_player_stats_by_name(player1_name,year)
-        player2_data = fetch_player_stats_by_name(player2_name,year)
+        player1_data = fetch_player_stats_by_name(player1_name, year)
+        player2_data = fetch_player_stats_by_name(player2_name, year)
 
-        player1_details = extract_player_data(player1_data)
-        player2_details = extract_player_data(player2_data)
-    else:
-        player1_details, player2_details = None, None
+        if player1_data:
+            player1_details = extract_player_data(player1_data)
+        else:
+            errors.append(f"Could not find data for {player1_name} in the specified year.")
 
-    return render_template('player_comparison.html', player1=player1_details, player2=player2_details)
+        if player2_data:
+            player2_details = extract_player_data(player2_data)
+        else:
+            errors.append(f"Could not find data for {player2_name} in the specified year.")
+
+    return render_template('player_comparison.html', 
+                           player1=player1_details, 
+                           player2=player2_details, 
+                           league_logos=league_logos,
+                           errors=errors,
+                           year=year)
 
 if __name__ == '__main__':
     app.run(debug=True)
