@@ -4,16 +4,28 @@ from dotenv import load_dotenv
 import requests
 import logging
 from stats_data import fetch_top_assists, fetch_stats, fetch_top_scorers, get_league_logos, fetch_player_stats_by_name, extract_player_data, league_logos_processor
+from flask_caching import Cache
+from functools import wraps
 
 load_dotenv()
 
 app = Flask(__name__)
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 app.context_processor(league_logos_processor)
 logging.basicConfig(level=logging.DEBUG)
 
-@app.route('/')
+def handle_api_error(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except requests.RequestException as e:
+            app.logger.error(f"API request failed: {str(e)}")
+            return jsonify({"error": "Failed to fetch data from the API"}), 503
+    return wrapper
 
+@app.route('/')
 def index():
     year = request.args.get('year', '2023')
     league_logos = get_league_logos()
@@ -28,6 +40,8 @@ def index():
     return render_template('index.html', year = year,league_logos = league_logos, league_codes = league_codes)
 
 @app.route('/league/<league_name>')
+@cache.cached(timeout=300)  # Cache for 5 minutes
+@handle_api_error
 def league(league_name):
     league_codes = {
         'premier-league': 39,
@@ -66,6 +80,8 @@ def league(league_name):
         return "League not found", 404
 
 @app.route('/top-scorer')
+@cache.cached(timeout=300)  # Cache for 5 minutes
+@handle_api_error
 def top_scorer():
     year = request.args.get('year','2023')
     league_codes = [39, 140, 135, 78, 61]
@@ -82,6 +98,8 @@ def top_scorer():
     return render_template('top_scorer.html', top_scorers=top_scorers,year = year,league_logos= league_logos)
 
 @app.route('/top-assists')
+@cache.cached(timeout=300)  # Cache for 5 minutes
+@handle_api_error
 def top_assists():
     year = request.args.get('year','2023')
     league_codes = [39, 140, 135, 78, 61]
@@ -102,9 +120,10 @@ def top_assists():
     
     return render_template('top_assists.html', assists_list=assists_list, year = year, league_codes = league_codes,league_logos = league_logos)
 
-@app.route('/player_comparison', methods=['GET'])
 
 @app.route('/player_comparison', methods=['GET'])
+@cache.cached(timeout=300, query_string=True)  # Cache for 5 minutes, consider query parameters
+@handle_api_error
 def compare_players():
     player1_name = request.args.get('player1')
     player2_name = request.args.get('player2')
