@@ -36,7 +36,7 @@
         <div>
             <label for="year">Year:</label>
             <select id="year" name="year" required>
-                {% for y in range(2023, 2012, -1) %}
+                {% for y in range(2024, 2012, -1) %}
                     <option value="{{ y }}">{{ y }}</option>
                 {% endfor %}
             </select>
@@ -58,7 +58,7 @@
             <hr>
             {% for league in player['leagues'] %}
             <div class="league-stats">
-                <h3>{{ league['league_name'] }}</h3>
+                <h3>{{ league['league_name'] }} {{year}}</h3>
                 <img src="{{ league['league_logo'] }}" alt="{{ league['league_name'] }}" class="league-logo">
                 <p><strong>Team:</strong> <img src="{{ league['team_logo'] }}" alt="{{ league['team_name'] }}" class="team-logo"> {{ league['team_name'] }}</p>
                 <p><strong>Appearances:</strong> {{ league['appearences'] }}</p>
