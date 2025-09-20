@@ -1,4 +1,11 @@
 Flask
+Flask-SQLAlchemy
 gunicorn
 python-dotenv
 requests
+flask_caching
+redis
+psycopg2-binary
+celery
+pydantic
+psutil

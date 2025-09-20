@@ -3,22 +3,82 @@ import os
 import requests
 from flask_sqlalchemy import SQLAlchemy
 from flask import current_app
-
+from datetime import datetime
 from dotenv import load_dotenv
+
 load_dotenv()
 
 # Initialize the SQLAlchemy object
 db = SQLAlchemy()
 
+class League(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    api_id = db.Column(db.Integer, unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    country = db.Column(db.String(100))
+    logo_url = db.Column(db.String(255))
+
+    def __repr__(self):
+        return f'<League {self.name}>'
+
+class Team(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    api_id = db.Column(db.Integer, unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    logo_url = db.Column(db.String(255))
+    league_id = db.Column(db.Integer, db.ForeignKey('league.id'))
+
+    league = db.relationship('League', backref='teams')
+
+    def __repr__(self):
+        return f'<Team {self.name}>'
+
 class Player(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    api_id = db.Column(db.Integer, unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
-    year = db.Column(db.Integer, nullable=False)
-    goals = db.Column(db.Integer, default=0)
-    assists = db.Column(db.Integer, default=0)
+    age = db.Column(db.Integer)
+    nationality = db.Column(db.String(100))
+    photo_url = db.Column(db.String(255))
+    height = db.Column(db.String(20))
+    weight = db.Column(db.String(20))
 
     def __repr__(self):
         return f'<Player {self.name}>'
+
+class PlayerStats(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
+    league_id = db.Column(db.Integer, db.ForeignKey('league.id'), nullable=False)
+    season = db.Column(db.Integer, nullable=False)
+    appearances = db.Column(db.Integer, default=0)
+    goals = db.Column(db.Integer, default=0)
+    assists = db.Column(db.Integer, default=0)
+    shots_total = db.Column(db.Integer, default=0)
+    shots_on_target = db.Column(db.Integer, default=0)
+    rating = db.Column(db.Float)
+    yellow_cards = db.Column(db.Integer, default=0)
+    red_cards = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    player = db.relationship('Player', backref='stats')
+    team = db.relationship('Team', backref='player_stats')
+    league = db.relationship('League', backref='player_stats')
+
+    def __repr__(self):
+        return f'<PlayerStats {self.player.name} - {self.season}>'
+
+class APICache(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cache_key = db.Column(db.String(255), unique=True, nullable=False)
+    data = db.Column(db.Text, nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<APICache {self.cache_key}>'
 
 def fetch_data_from_api(league_code, year):
     api_key = os.environ['API_KEY']

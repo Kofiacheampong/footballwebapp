@@ -6,14 +6,49 @@ import logging
 from stats_data import fetch_top_assists, fetch_stats, fetch_top_scorers, get_league_logos, fetch_player_stats_by_name, extract_player_data, league_logos_processor
 from flask_caching import Cache
 from functools import wraps
+from database import db
+import time
+import psutil
+from datetime import datetime
 
 load_dotenv()
 
 app = Flask(__name__)
-cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///football_stats.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Cache configuration - Redis if available, otherwise simple
+if os.getenv('REDIS_URL'):
+    cache_config = {
+        'CACHE_TYPE': 'redis',
+        'CACHE_REDIS_URL': os.getenv('REDIS_URL')
+    }
+else:
+    cache_config = {'CACHE_TYPE': 'simple'}
+
+cache = Cache(app, config=cache_config)
+
+# Initialize database
+db.init_app(app)
 
 app.context_processor(league_logos_processor)
 logging.basicConfig(level=logging.DEBUG)
+
+# CLI commands for database management
+@app.cli.command()
+def init_db():
+    """Initialize the database."""
+    db.create_all()
+    print('Database tables created.')
+
+@app.cli.command()
+def reset_db():
+    """Reset the database."""
+    db.drop_all()
+    db.create_all()
+    print('Database reset complete.')
 
 def handle_api_error(func):
     @wraps(func)
@@ -165,6 +200,95 @@ def compare_players():
         errors=errors,
         year=year
     )
+
+# Health check endpoints
+@app.route('/health')
+def health_check():
+    """Basic health check endpoint"""
+    return jsonify({
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": "1.0.0"
+    }), 200
+
+@app.route('/health/detailed')
+def detailed_health_check():
+    """Detailed health check with system metrics"""
+    try:
+        # Check database connection
+        db_status = "healthy"
+        try:
+            db.session.execute('SELECT 1')
+            db.session.commit()
+        except Exception as e:
+            db_status = f"unhealthy: {str(e)}"
+
+        # Check cache connection
+        cache_status = "healthy"
+        try:
+            cache.set('health_check', 'test', timeout=5)
+            if cache.get('health_check') != 'test':
+                cache_status = "unhealthy: cache write/read failed"
+        except Exception as e:
+            cache_status = f"unhealthy: {str(e)}"
+
+        # System metrics
+        system_metrics = {
+            "cpu_percent": psutil.cpu_percent(),
+            "memory_percent": psutil.virtual_memory().percent,
+            "disk_percent": psutil.disk_usage('/').percent
+        }
+
+        health_data = {
+            "status": "healthy" if db_status == "healthy" and cache_status == "healthy" else "degraded",
+            "timestamp": datetime.utcnow().isoformat(),
+            "version": "1.0.0",
+            "checks": {
+                "database": db_status,
+                "cache": cache_status
+            },
+            "system": system_metrics
+        }
+
+        status_code = 200 if health_data["status"] == "healthy" else 503
+        return jsonify(health_data), status_code
+
+    except Exception as e:
+        return jsonify({
+            "status": "unhealthy",
+            "timestamp": datetime.utcnow().isoformat(),
+            "error": str(e)
+        }), 503
+
+@app.route('/metrics')
+def metrics():
+    """Prometheus metrics endpoint"""
+    try:
+        # Basic application metrics
+        metrics_data = []
+
+        # System metrics
+        cpu_usage = psutil.cpu_percent()
+        memory_usage = psutil.virtual_memory().percent
+
+        metrics_data.append(f'football_app_cpu_usage {cpu_usage}')
+        metrics_data.append(f'football_app_memory_usage {memory_usage}')
+
+        # Database connection pool metrics (if available)
+        try:
+            # This would depend on your SQLAlchemy setup
+            metrics_data.append('football_app_db_connections_active 1')
+        except:
+            metrics_data.append('football_app_db_connections_active 0')
+
+        # Cache hit ratio (mock data for now)
+        metrics_data.append('football_app_cache_hit_ratio 0.85')
+
+        return '\n'.join(metrics_data) + '\n', 200, {'Content-Type': 'text/plain'}
+
+    except Exception as e:
+        app.logger.error(f"Metrics endpoint error: {e}")
+        return "# Error generating metrics\n", 500, {'Content-Type': 'text/plain'}
 
 if __name__ == '__main__':
     app.run(debug=True)

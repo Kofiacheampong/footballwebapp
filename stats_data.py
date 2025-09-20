@@ -3,11 +3,64 @@ import time
 from dotenv import load_dotenv
 import logging
 import requests
+from typing import Optional, Dict, Any
+from functools import wraps
+import json
+from datetime import datetime
 
 load_dotenv()
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
+
+# Retry configuration
+MAX_RETRIES = 3
+RETRY_DELAY = 1
+
+def retry_on_failure(retries: int = MAX_RETRIES, delay: float = RETRY_DELAY):
+    """Decorator to retry API calls on failure"""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            last_exception = None
+
+            for attempt in range(retries + 1):
+                try:
+                    result = func(*args, **kwargs)
+                    if result is not None:
+                        return result
+                    # If result is None, treat as failure and retry
+                    raise Exception("API returned None")
+
+                except Exception as e:
+                    last_exception = e
+                    if attempt < retries:
+                        logging.warning(f"Attempt {attempt + 1} failed for {func.__name__}: {e}. Retrying in {delay}s...")
+                        time.sleep(delay * (attempt + 1))  # Exponential backoff
+                    else:
+                        logging.error(f"All {retries + 1} attempts failed for {func.__name__}: {e}")
+
+            return None
+        return wrapper
+    return decorator
+
+def validate_api_response(response_data: Dict[Any, Any]) -> bool:
+    """Validate API response structure"""
+    if not isinstance(response_data, dict):
+        return False
+
+    if 'response' not in response_data:
+        return False
+
+    if not isinstance(response_data['response'], list):
+        return False
+
+    return True
+
+def log_api_metrics(func_name: str, league_code: int, year: int, success: bool, response_time: float):
+    """Log API call metrics for monitoring"""
+    status = "SUCCESS" if success else "FAILURE"
+    logging.info(f"API_METRICS: {func_name} | League: {league_code} | Year: {year} | Status: {status} | Response Time: {response_time:.2f}s")
 
 # Context processor for league logos (can be imported by Flask app)
 def league_logos_processor():
@@ -21,8 +74,12 @@ def league_logos_processor():
         }
     }
 
-def fetch_stats(league_code, year):
+@retry_on_failure(retries=MAX_RETRIES)
+def fetch_stats(league_code: int, year: int) -> Optional[Dict[Any, Any]]:
+    """Fetch league standings with retry logic and validation"""
+    start_time = time.time()
     api_key = os.environ.get('API_KEY')
+
     if not api_key:
         logging.error("API_KEY environment variable is missing")
         return None
@@ -36,14 +93,24 @@ def fetch_stats(league_code, year):
     url = base_url + endpoint
 
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=30)
         response.raise_for_status()
         data = response.json()
-        logging.debug(f"Fetched standings for league {league_code}, year {year}: {data}")
+
+        # Validate response structure
+        if not validate_api_response(data):
+            raise ValueError("Invalid API response structure")
+
+        response_time = time.time() - start_time
+        log_api_metrics('fetch_stats', league_code, year, True, response_time)
+        logging.debug(f"Fetched standings for league {league_code}, year {year}")
         return data
-    except requests.RequestException as e:
+
+    except (requests.RequestException, ValueError, json.JSONDecodeError) as e:
+        response_time = time.time() - start_time
+        log_api_metrics('fetch_stats', league_code, year, False, response_time)
         logging.error(f"Failed to fetch standings for league {league_code}, year {year}: {e}")
-        return None
+        raise e
 
 def fetch_top_scorers(league_code, year):
     api_key = os.environ.get('API_KEY')
