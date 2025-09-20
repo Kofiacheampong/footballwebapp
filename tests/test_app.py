@@ -1,4 +1,9 @@
 import pytest
+import os
+# Set test environment before importing app
+os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
+os.environ['API_KEY'] = 'test_key'
+
 from app import app
 from database import db
 
