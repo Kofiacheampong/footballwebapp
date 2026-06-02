@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: football-app
-  labels:
-    name: football-app
-    app: football-web-app

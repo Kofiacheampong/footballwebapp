@@ -1,54 +1,209 @@
-
 {% extends "base.html" %}
 
-{% block title %}Top Scorer 2023{% endblock %}
+{% block title %}Top Scorers - Football Statistics{% endblock %}
 
 {% block content %}
-<div><!-- Add this form somewhere in base.html or the specific template -->
-    <form action="{{ request.path }}" method="get" class="mb-4 form-select">
-        <div class="form-group">
-            <label for="year">Select Year:</label>
-            <select id="year" name="year" class="form-control">
-                {% for y in range(2015, 2024) %}
-                <option value="{{ y }}" {% if y == year|int %}selected{% endif %}>{{ y }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn btn-primary">Filter</button>
-        </form></div>
-<div class="container mt-4">
-    <h1 class="mb-4" >Top Scorers</h1>
-    <div class="table-responsive">
-    <table class="table table-bordered table-hover">
-        <thead>
-        <tr>
-            <th>Player</th>
-            <th>Team</th>
-            <th>Goals</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for scorer in top_scorers %}
-       
-        <tr>
-            <div></div>
-
-            <td>
-                <div>
-                <img src="{{ scorer['player']['photo'] }}" alt="Player Image" width="30">{{ scorer['player']['name'] }}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <h1>
+                    <i class="fas fa-medal me-2"></i>Top Scorers
+                </h1>
+                <p class="text-muted mb-0">Leading goal scorers across Europe's top 5 leagues - {{ year or '2025' }}/{{ (year|int + 1) if year else '2026' }} season</p>
             </div>
-            </td>
-
-            <td>
-                <div>
-                <img src="{{ scorer['statistics'][0]['team']['logo'] }}" alt="Team Emblem" width="30">{{ scorer['statistics'][0]['team']['name'] }}
-            </div>
-            </td>
-            <td>{{ scorer['statistics'][0]['goals']['total'] }}</td>
-        </tr>
-    </tbody>
-        {% endfor %}
-    </table>
+        </div>
+    </div>
 </div>
-    <a href="{{ url_for('index') }}">Back to Home</a>
+
+{% if api_error %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>API Key Issue:</strong>
+            {% if api_error_messages %}
+                {% for error in api_error_messages %}
+                    <br>{{ error }}
+                {% endfor %}
+                <br><br>
+                <strong>Solution:</strong> Please verify your API key from RapidAPI is correct and has access to the API-Football service.
+            {% else %}
+                Unable to fetch top scorers data. Please check your API key or try again later.
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if top_scorers %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-fire me-2"></i>Goal Scoring Leaders
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th data-sortable data-type="number">Rank</th>
+                                <th data-sortable>Player</th>
+                                <th data-sortable>Team</th>
+                                <th data-sortable>League</th>
+                                <th class="text-center" data-sortable data-type="number">Apps</th>
+                                <th class="text-center" data-sortable data-type="number">Goals</th>
+                                <th class="text-center" data-sortable data-type="number">Assists</th>
+                                <th class="text-center" data-sortable data-type="number">Shots</th>
+                                <th class="text-center" data-sortable data-type="number">Shot %</th>
+                                <th class="text-center" data-sortable data-type="number">Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for player in top_scorers[:50] %}
+                            {% set stats = player.statistics[0] %}
+                            <tr {% if loop.index <= 3 %}class="table-warning"{% elif loop.index <= 10 %}class="table-light"{% endif %}>
+                                <td class="fw-bold">
+                                    {% if loop.index == 1 %}
+                                        <i class="fas fa-crown text-warning me-1"></i>
+                                    {% elif loop.index == 2 %}
+                                        <i class="fas fa-medal text-secondary me-1"></i>
+                                    {% elif loop.index == 3 %}
+                                        <i class="fas fa-medal text-warning me-1"></i>
+                                    {% endif %}
+                                    {{ loop.index }}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ player.player.photo }}"
+                                             alt="{{ player.player.name }}"
+                                             class="rounded-circle me-3"
+                                             style="width: 40px; height: 40px; object-fit: cover;">
+                                        <div>
+                                            <div class="fw-bold">{{ player.player.name }}</div>
+                                            <small class="text-muted">{{ player.player.nationality }} &bull; {{ player.player.age }} years</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ stats.team.logo }}"
+                                             alt="{{ stats.team.name }}"
+                                             class="me-2"
+                                             style="width: 25px; height: 25px; object-fit: contain;">
+                                        <span>{{ stats.team.name }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if league_logos %}
+                                            <img src="{{ league_logos.get(stats.league.id, '') }}"
+                                                 alt="{{ stats.league.name }}"
+                                                 class="me-2"
+                                                 style="width: 20px; height: 20px; object-fit: contain;">
+                                        {% endif %}
+                                        <small>{{ stats.league.name }}</small>
+                                    </div>
+                                </td>
+                                <td class="text-center">{{ stats.games.appearences or 0 }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-danger fs-6">{{ stats.goals.total or 0 }}</span>
+                                </td>
+                                <td class="text-center">{{ stats.goals.assists or 0 }}</td>
+                                <td class="text-center">{{ stats.shots.total or 0 }}</td>
+                                <td class="text-center">
+                                    {% if stats.shots.total and stats.shots.total > 0 %}
+                                        {{ "%.1f"|format((stats.goals.total or 0) / stats.shots.total * 100) }}%
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if stats.games.rating %}
+                                        <span class="badge {% if stats.games.rating|float >= 7.5 %}bg-success{% elif stats.games.rating|float >= 7.0 %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {{ "%.1f"|format(stats.games.rating|float) }}
+                                        </span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-3 mb-3">
+        <div class="stat-card text-center p-3">
+                <i class="fas fa-trophy fa-2x text-warning mb-2 stat-icon"></i>
+                <h5>{{ top_scorers[0].statistics[0].goals.total or 0 }}</h5>
+                <p class="mb-0">Leading Goals</p>
+                <small class="text-muted">{{ top_scorers[0].player.name if top_scorers else 'N/A' }}</small>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card text-center p-3">
+                <i class="fas fa-users fa-2x text-info mb-2 stat-icon"></i>
+                <h5>{{ top_scorers|length }}</h5>
+                <p class="mb-0">Total Players</p>
+                <small class="text-muted">Across all leagues</small>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card text-center p-3">
+                <i class="fas fa-calculator fa-2x text-success mb-2 stat-icon"></i>
+                <h5>{{ "%.1f"|format((top_scorers[:10]|sum(attribute='statistics.0.goals.total')|default(0)) / (top_scorers[:10]|length)) }}</h5>
+                <p class="mb-0">Avg Goals (Top 10)</p>
+                <small class="text-muted">Per player</small>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card text-center p-3">
+                <i class="fas fa-globe fa-2x text-primary mb-2 stat-icon"></i>
+                <h5>6</h5>
+                <p class="mb-0">Leagues</p>
+                <small class="text-muted">Europe's elite &amp; UCL</small>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            No top scorers data available for the {{ year or '2025' }} season. Please try a different year or check back later.
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Related Statistics</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ url_for('top_assists') }}?year={{ year or '2025' }}" class="btn btn-outline-success">
+                        <i class="fas fa-hands-helping me-1"></i>Top Assists
+                    </a>
+                    <a href="{{ url_for('compare_players') }}?year={{ year or '2025' }}" class="btn btn-outline-info">
+                        <i class="fas fa-balance-scale me-1"></i>Compare Players
+                    </a>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-home me-1"></i>Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

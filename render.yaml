@@ -1,0 +1,54 @@
+services:
+  # Main Web Service
+  - type: web
+    name: football-webapp
+    env: python
+    region: oregon
+    plan: starter
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --config gunicorn_config.py app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: API_KEY
+        sync: false  # Must be set manually in Render dashboard
+      - key: DATABASE_URL
+        fromDatabase:
+          name: football-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: football-redis
+          property: connectionString
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CACHE_TYPE
+        value: redis
+      - key: CACHE_TIMEOUT
+        value: 300
+      - key: LOG_LEVEL
+        value: info
+      - key: WORKERS
+        value: 4
+    healthCheckPath: /health
+    autoDeploy: true
+
+  # PostgreSQL Database
+databases:
+  - name: football-db
+    databaseName: football_db
+    user: football_user
+    region: oregon
+    plan: starter
+    postgresMajorVersion: 15
+
+  # Redis Instance
+  - name: football-redis
+    region: oregon
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []  # Empty means accessible only from other Render services

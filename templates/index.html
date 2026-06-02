@@ -1,54 +1,100 @@
 {% extends "base.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Football Statistics - Home{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        {% for league_name, league_code in league_codes.items() %}
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img src="{{ league_logos[league_name] }}" class="card-img-top img-fluid" alt="{{ league_name }}" >
-                <div class="card-body">
-                    <!-- <h5 class="card-title">{{ league_name.replace('-', ' ').title() }}</h5> -->
-                    <p class="card-text">View the standings and top players of the {{ league_name.replace('-', ' ').title() }}.</p>
-                    <a href="{{ url_for('league', league_name=league_name) }}" class="btn btn-primary">View League</a>
+<div class="row">
+    <div class="col-12">
+        <div class="hero p-4 mb-4">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-futbol me-2"></i>Football Statistics Dashboard
+                    </h1>
+                    <p class="mb-0 text-secondary">Standings, goals, assists & player comparisons for Europe's top leagues</p>
                 </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card">
-                <i class="bi bi-trophy" style="font-size: 5rem; display: block; text-align: center; margin-top: 20px;"></i>
-                <div class="card-body">
-                    <h5 class="card-title">Top Scorers</h5>
-                    <p class="card-text">View the top scorers across all leagues.</p>
-                    <a href="{{ url_for('top_scorer') }}" class="btn btn-primary">View Top Scorers</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <i class="bi bi-stars" style="font-size: 5rem; display: block; text-align: center; margin-top: 20px;"></i>                
-                <div class="card-body mb-4" >
-                    <h5 class="card-title">Top Assists</h5>
-                    <p class="card-text">View the top assists across all leagues.</p>
-                    <a href="{{ url_for('top_assists') }}" class="btn btn-primary">View Top Assists</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <i class="bi bi-person-lines-fill" style="font-size: 5rem; display: block; text-align: center; margin-top: 20px;"></i>
-                <div class="card-body">
-                    <h5 class="card-title">Player Comparison</h5>
-                    <p class="card-text">Compare the stats of different players.</p>
-                    <a href="{{ url_for('compare_players') }}" class="btn btn-primary">Compare Players</a>
-                </div>
+                <form class="d-flex gap-2 align-items-center" action="{{ url_for('compare_players') }}" method="GET">
+                    <input type="text" class="form-control form-control-sm" name="player1" placeholder="Player 1" style="width:130px">
+                    <input type="text" class="form-control form-control-sm" name="player2" placeholder="Player 2" style="width:130px">
+                    <input type="hidden" name="year" value="{{ year or '2025' }}">
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="fas fa-search me-1"></i>Compare
+                    </button>
+                </form>
             </div>
         </div>
     </div>
+</div>
+
+<div class="row">
+    {% set league_info = {
+        'premier-league': {
+            'name': 'Premier League',
+            'country': 'England',
+            'teams': 20,
+            'code': 39
+        },
+        'la-liga': {
+            'name': 'La Liga',
+            'country': 'Spain',
+            'teams': 20,
+            'code': 140
+        },
+        'serie-a': {
+            'name': 'Serie A',
+            'country': 'Italy',
+            'teams': 20,
+            'code': 135
+        },
+        'bundesliga': {
+            'name': 'Bundesliga',
+            'country': 'Germany',
+            'teams': 18,
+            'code': 78
+        },
+        'ligue-1': {
+            'name': 'Ligue 1',
+            'country': 'France',
+            'teams': 18,
+            'code': 61
+        },
+        'champions-league': {
+            'name': 'UEFA Champions League',
+            'country': 'Europe',
+            'teams': 36,
+            'code': 2
+        }
+    } %}
+
+    {% for league_key, info in league_info.items() %}
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card h-100 league-card">
+            <div class="card-header d-flex align-items-center">
+                {% if league_logos %}
+                    <img src="{{ league_logos.get(info.code, '') }}"
+                         alt="{{ info.name }}"
+                         class="me-3 league-logo"
+                         style="width: 40px; height: 40px; object-fit: contain;">
+                {% endif %}
+                <div>
+                    <h5 class="mb-0">{{ info.name }}</h5>
+                    <small class="text-muted">{{ info.country }}</small>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    <i class="fas fa-users me-2"></i>{{ info.teams }} teams competing<br>
+                    <i class="fas fa-calendar me-2"></i>{{ year or '2025' }}/{{ (year|int + 1) if year else '2026' }} season
+                </p>
+                <div class="d-grid">
+                    <a href="{{ url_for('league', league_name=league_key) }}?year={{ year or '2025' }}"
+                       class="btn btn-primary">
+                        <i class="fas fa-eye me-2"></i>View Standings
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 {% endblock %}

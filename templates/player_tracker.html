@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block title %}Player Tracker - Football Stats{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="text-center mb-4">
+                <i class="fas fa-chart-line me-2"></i>Player Career Tracker
+            </h1>
+            <p class="text-center text-muted">Compare your favorite players' stats year-over-year across the last 5 seasons</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-user-plus me-2"></i>Add Player to Track</h5>
+                </div>
+                <div class="card-body">
+                    <form id="addPlayerForm" class="row g-3">
+                        <div class="col-md-8">
+                            <label for="playerName" class="form-label">Player Name</label>
+                            <input type="text" class="form-control" id="playerName" placeholder="e.g., Haaland, Mbappe, Salah">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary d-block w-100">
+                                <i class="fas fa-plus me-1"></i>Add Player
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-users me-2"></i>Currently Tracking</h5>
+                    <span class="badge bg-info" id="playerCount">0</span>
+                </div>
+                <div class="card-body">
+                    <div id="trackedPlayers" class="row">
+                        <div class="col-12 text-center text-muted py-4">
+                            <i class="fas fa-info-circle me-2"></i>No players tracked yet. Add some players above to get started!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-futbol me-2"></i>Goals by Season</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="goalsChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-hands-helping me-2"></i>Assists by Season</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="assistsChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-running me-2"></i>Appearances by Season</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="gamesChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-trophy me-2"></i>Current Season (2025/26) Leaderboard</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="leaderboardTable">
+                            <thead>
+                                <tr>
+                                    <th data-sortable data-type="number">Rank</th>
+                                    <th data-sortable>Player</th>
+                                    <th data-sortable>Team</th>
+                                    <th data-sortable data-type="number">Goals</th>
+                                    <th data-sortable data-type="number">Assists</th>
+                                    <th data-sortable data-type="number">Games</th>
+                                    <th data-sortable data-type="number">G+A</th>
+                                    <th data-sortable data-type="number">Goals/Game</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboardBody">
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        Add players to see leaderboard statistics
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+let trackedPlayers = JSON.parse(localStorage.getItem('trackedPlayers') || '[]');
+let playerCharts = { goals: null, assists: null, games: null };
+
+const chartColors = [
+    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+    '#FF9F40', '#E7E9ED', '#4BC0C0'
+];
+
+const seasonLabels = ['2021/22', '2022/23', '2023/24', '2024/25', '2025/26'];
+const seasonKeys = ['2021', '2022', '2023', '2024', '2025'];
+
+function initCharts() {
+    const chartConfig = {
+        type: 'line',
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+                x: { display: true, title: { display: true, text: 'Season' } },
+                y: {
+                    display: true,
+                    title: { display: true, text: 'Count' },
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            },
+            interaction: { mode: 'nearest', axis: 'x', intersect: false }
+        },
+        data: { labels: seasonLabels, datasets: [] }
+    };
+
+    const goalsCtx = document.getElementById('goalsChart');
+    const assistsCtx = document.getElementById('assistsChart');
+    const gamesCtx = document.getElementById('gamesChart');
+
+    if (goalsCtx) playerCharts.goals = new Chart(goalsCtx, { ...chartConfig, data: { labels: seasonLabels, datasets: [] } });
+    if (assistsCtx) playerCharts.assists = new Chart(assistsCtx, { ...chartConfig, data: { labels: seasonLabels, datasets: [] } });
+    if (gamesCtx) playerCharts.games = new Chart(gamesCtx, { ...chartConfig, data: { labels: seasonLabels, datasets: [] } });
+}
+
+function getSeasonStat(seasons, key, stat) {
+    const season = seasons.find(s => s.season === key);
+    return season ? season[stat] : 0;
+}
+
+document.getElementById('addPlayerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const playerName = document.getElementById('playerName').value.trim();
+
+    if (!playerName) {
+        alert('Please enter a player name');
+        return;
+    }
+
+    if (trackedPlayers.find(p => p.name.toLowerCase() === playerName.toLowerCase())) {
+        alert('Player is already being tracked');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/player-tracker/add?name=${encodeURIComponent(playerName)}`);
+        const result = await response.json();
+
+        if (result.success) {
+            trackedPlayers.push(result.player);
+            localStorage.setItem('trackedPlayers', JSON.stringify(trackedPlayers));
+            renderTrackedPlayers();
+            updateCharts();
+            updateLeaderboard();
+            document.getElementById('playerName').value = '';
+        } else {
+            alert(result.error || 'Failed to add player');
+        }
+    } catch (error) {
+        console.error('Error adding player:', error);
+        alert('Failed to add player. Please try again.');
+    }
+});
+
+function renderTrackedPlayers() {
+    const container = document.getElementById('trackedPlayers');
+    const count = document.getElementById('playerCount');
+
+    if (trackedPlayers.length === 0) {
+        container.innerHTML = `
+            <div class="col-12 text-center text-muted py-4">
+                <i class="fas fa-info-circle me-2"></i>No players tracked yet. Add some players above to get started!
+            </div>
+        `;
+        count.textContent = '0';
+        return;
+    }
+
+    count.textContent = trackedPlayers.length;
+
+    container.innerHTML = trackedPlayers.map((player, index) => `
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <img src="${player.photo || ''}"
+                         alt="${player.name}"
+                         class="rounded-circle mb-2"
+                         style="width: 60px; height: 60px; object-fit: cover;"
+                         onerror="this.style.display='none'">
+                    <h6 class="card-title">${player.name}</h6>
+                    <p class="card-text small text-muted">${getCurrentTeam(player.seasons)}</p>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="fw-bold text-danger">${player.current.goals}</div>
+                            <small class="text-muted">Goals</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-success">${player.current.assists}</div>
+                            <small class="text-muted">Assists</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-info">${player.current.games}</div>
+                            <small class="text-muted">Games</small>
+                        </div>
+                    </div>
+                    <div class="mt-2 small text-muted">
+                        Seasons: ${player.seasons.filter(s => s.games > 0).length}
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger mt-2" onclick="removePlayer(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getCurrentTeam(seasons) {
+    const current = seasons.find(s => s.season === '2025');
+    return current && current.team !== 'N/A' ? current.team : (seasons.find(s => s.team !== 'N/A')?.team || 'Unknown');
+}
+
+function removePlayer(index) {
+    if (confirm('Remove this player from tracking?')) {
+        trackedPlayers.splice(index, 1);
+        localStorage.setItem('trackedPlayers', JSON.stringify(trackedPlayers));
+        renderTrackedPlayers();
+        updateCharts();
+        updateLeaderboard();
+    }
+}
+
+function updateCharts() {
+    const goalDatasets = [];
+    const assistDatasets = [];
+    const gameDatasets = [];
+
+    trackedPlayers.forEach((player, index) => {
+        const color = chartColors[index % chartColors.length];
+
+        const goalsData = seasonKeys.map(sk => getSeasonStat(player.seasons, sk, 'goals'));
+        const assistsData = seasonKeys.map(sk => getSeasonStat(player.seasons, sk, 'assists'));
+        const gamesData = seasonKeys.map(sk => getSeasonStat(player.seasons, sk, 'games'));
+
+        const datasetConfig = {
+            borderColor: color,
+            backgroundColor: color + '20',
+            tension: 0.1,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            fill: false
+        };
+
+        goalDatasets.push({ label: player.name, data: goalsData, ...datasetConfig });
+        assistDatasets.push({ label: player.name, data: assistsData, ...datasetConfig });
+        gameDatasets.push({ label: player.name, data: gamesData, ...datasetConfig });
+    });
+
+    if (playerCharts.goals) {
+        playerCharts.goals.data.datasets = goalDatasets;
+        playerCharts.goals.update();
+    }
+    if (playerCharts.assists) {
+        playerCharts.assists.data.datasets = assistDatasets;
+        playerCharts.assists.update();
+    }
+    if (playerCharts.games) {
+        playerCharts.games.data.datasets = gameDatasets;
+        playerCharts.games.update();
+    }
+}
+
+function updateLeaderboard() {
+    const tbody = document.getElementById('leaderboardBody');
+
+    if (trackedPlayers.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center text-muted py-4">
+                    Add players to see leaderboard statistics
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    const sortedPlayers = [...trackedPlayers].sort((a, b) => {
+        const gaA = a.current.goals + a.current.assists;
+        const gaB = b.current.goals + b.current.assists;
+        return gaB - gaA || b.current.goals - a.current.goals;
+    });
+
+    tbody.innerHTML = sortedPlayers.map((player, index) => {
+        const ga = player.current.goals + player.current.assists;
+        const goalRatio = player.current.games > 0
+            ? (player.current.goals / player.current.games).toFixed(2) : '0.00';
+        const team = getCurrentTeam(player.seasons);
+
+        return `
+            <tr>
+                <td>
+                    <span class="badge bg-${index === 0 ? 'warning' : index === 1 ? 'secondary' : index === 2 ? 'success' : 'light'} text-dark">
+                        ${index + 1}
+                    </span>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <img src="${player.photo || ''}"
+                             alt="${player.name}"
+                             class="rounded-circle me-2"
+                             style="width: 30px; height: 30px; object-fit: cover;"
+                             onerror="this.style.display='none'">
+                        <strong>${player.name}</strong>
+                    </div>
+                </td>
+                <td>${team}</td>
+                <td><span class="badge bg-danger">${player.current.goals}</span></td>
+                <td><span class="badge bg-success">${player.current.assists}</span></td>
+                <td><span class="badge bg-info">${player.current.games}</span></td>
+                <td><span class="badge bg-primary">${ga}</span></td>
+                <td>${goalRatio}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initCharts();
+    renderTrackedPlayers();
+    updateCharts();
+    updateLeaderboard();
+});
+</script>
+{% endblock %}
